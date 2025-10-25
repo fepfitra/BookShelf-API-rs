@@ -5,6 +5,9 @@ use axum::{
 use std::sync::Arc;
 use tracing_subscriber::prelude::*;
 
+mod utils;
+pub use utils::error::AppError;
+
 mod services;
 use services::book::{BookState, handler::create_book, repo::InMemoryBookRepo};
 

@@ -7,10 +7,12 @@ use uuid::Uuid;
 
 use super::BookState;
 use super::repo::Book;
+use crate::AppError;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BookParams {
+    #[serde(default)]
     pub name: String,
     pub year: i32,
     pub author: String,
@@ -24,7 +26,12 @@ pub struct BookParams {
 pub async fn create_book(
     State(state): State<BookState>,
     Json(params): Json<BookParams>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
+    if params.name.is_empty() {
+        let message = "Gagal menambahkan buku. Mohon isi nama buku".to_string();
+        return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
+    }
+
     let book = Book {
         id: Uuid::new_v4(),
         name: params.name,
@@ -40,13 +47,13 @@ pub async fn create_book(
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
 
-    let body = json!({
+    let body = Json(json!({
         "status": "success",
         "message": "Buku berhasil ditambahkan",
         "data": {
             "bookId": id
         }
-    });
+    }));
 
-    (StatusCode::CREATED, headers, Json(body))
+    Ok((StatusCode::CREATED, headers, body))
 }

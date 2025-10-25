@@ -63,3 +63,17 @@ pub async fn create_book(
 
     Ok((StatusCode::CREATED, headers, body))
 }
+
+pub async fn get_books(State(state): State<BookState>) -> impl IntoResponse {
+    let books = state.repo.get_books();
+
+    let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
+    let body = Json(json!({
+        "status": "success",
+        "data": {
+            "books": books
+        }
+    }));
+
+    (StatusCode::OK, headers, body)
+}

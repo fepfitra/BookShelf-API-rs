@@ -9,7 +9,11 @@ mod utils;
 pub use utils::error::AppError;
 
 mod services;
-use services::book::{BookState, handler::create_book, repo::InMemoryBookRepo};
+use services::book::{
+    BookState,
+    handler::{create_book, get_books},
+    repo::InMemoryBookRepo,
+};
 
 #[tokio::main]
 async fn main() {
@@ -23,7 +27,7 @@ async fn main() {
 
     let book_repo = InMemoryBookRepo::default();
     let book_router = Router::new()
-        .route("/", post(create_book))
+        .route("/", post(create_book).get(get_books))
         .with_state(BookState {
             repo: Arc::new(book_repo),
         });
@@ -42,3 +46,4 @@ async fn main() {
 async fn root() -> &'static str {
     "Hello, world!"
 }
+

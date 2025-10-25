@@ -18,8 +18,16 @@ pub struct Book {
     pub reading: bool,
 }
 
+#[derive(Serialize)]
+pub struct BookSummary {
+    pub id: Uuid,
+    pub name: String,
+    pub publisher: String,
+}
+
 pub trait BookRepo: Send + Sync {
     fn save_book(&self, book: &Book) -> Uuid;
+    fn get_books(&self) -> Vec<BookSummary>;
 }
 
 #[derive(Default, Clone)]
@@ -31,5 +39,17 @@ impl BookRepo for InMemoryBookRepo {
     fn save_book(&self, book: &Book) -> Uuid {
         self.map.lock().unwrap().insert(book.id, book.clone());
         book.id
+    }
+    fn get_books(&self) -> Vec<BookSummary> {
+        self.map
+            .lock()
+            .unwrap()
+            .values()
+            .map(|book| BookSummary {
+                id: book.id,
+                name: book.name.clone(),
+                publisher: book.publisher.clone(),
+            })
+            .collect()
     }
 }

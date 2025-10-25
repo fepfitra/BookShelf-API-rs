@@ -5,19 +5,19 @@ use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
 
-// Import from our sibling 'repo' module and parent 'book' module
 use super::BookState;
 use super::repo::Book;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BookParams {
     pub name: String,
     pub year: i32,
     pub author: String,
     pub summary: String,
     pub publisher: String,
-    pub pageCount: i32,
-    pub readPage: i32,
+    pub page_count: i32,
+    pub read_page: i32,
     pub reading: bool,
 }
 
@@ -32,8 +32,8 @@ pub async fn create_book(
         publisher: params.publisher,
         author: params.author,
         summary: params.summary,
-        pageCount: params.pageCount,
-        readPage: params.readPage,
+        page_count: params.page_count,
+        read_page: params.read_page,
         reading: params.reading,
     };
     let id = state.repo.save_book(&book);

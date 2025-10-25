@@ -13,8 +13,8 @@ pub struct Book {
     pub author: String,
     pub summary: String,
     pub publisher: String,
-    pub pageCount: i32,
-    pub readPage: i32,
+    pub page_count: i32,
+    pub read_page: i32,
     pub reading: bool,
 }
 

@@ -31,13 +31,13 @@ pub struct BookSummary {
 }
 
 pub trait BookRepo: Send + Sync {
-    fn save_book(&self, book: &Book) -> Uuid {
+    fn save_book(&self, _book: &Book) -> Uuid {
         unimplemented!()
     }
     fn get_books(&self) -> Vec<BookSummary> {
         unimplemented!()
     }
-    fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
+    fn get_book_by_id(&self, _id: Uuid) -> Option<Book> {
         unimplemented!()
     }
 }

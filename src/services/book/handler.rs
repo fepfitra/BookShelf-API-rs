@@ -1,6 +1,8 @@
+use axum::extract::Path;
 use axum::http::{StatusCode, header};
 use axum::response::IntoResponse;
 use axum::{Json, extract::State};
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
@@ -21,6 +23,12 @@ pub struct BookParams {
     pub page_count: i32,
     pub read_page: i32,
     pub reading: bool,
+    #[serde(default)]
+    pub finished: bool,
+    #[serde(default)]
+    pub inserted_at: DateTime<Utc>,
+    #[serde(default)]
+    pub updated_at: DateTime<Utc>,
 }
 
 pub async fn create_book(
@@ -48,6 +56,13 @@ pub async fn create_book(
         page_count: params.page_count,
         read_page: params.read_page,
         reading: params.reading,
+        updated_at: Utc::now(),
+        inserted_at: Utc::now(),
+        finished: if params.reading {
+            params.read_page == params.page_count
+        } else {
+            false
+        },
     };
     let id = state.repo.save_book(&book);
 
@@ -76,4 +91,24 @@ pub async fn get_books(State(state): State<BookState>) -> impl IntoResponse {
     }));
 
     (StatusCode::OK, headers, body)
+}
+
+pub async fn get_book_by_id(
+    State(state): State<BookState>,
+    Path(book_id): Path<Uuid>,
+) -> Result<impl IntoResponse, AppError> {
+    if let Some(book) = state.repo.get_book_by_id(book_id) {
+        let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
+        let body = Json(json!({
+            "status": "success",
+            "data": {
+                "book": book
+            }
+        }));
+
+        Ok((StatusCode::OK, headers, body))
+    } else {
+        let message = "Buku tidak ditemukan".to_string();
+        Err(AppError::ClientFail(StatusCode::NOT_FOUND, message))
+    }
 }

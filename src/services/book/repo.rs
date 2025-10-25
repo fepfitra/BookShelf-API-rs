@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::Serialize;
 use std::{
     collections::HashMap,
@@ -6,6 +7,7 @@ use std::{
 use uuid::Uuid;
 
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Book {
     pub id: Uuid,
     pub name: String,
@@ -16,6 +18,9 @@ pub struct Book {
     pub page_count: i32,
     pub read_page: i32,
     pub reading: bool,
+    pub finished: bool,
+    pub updated_at: DateTime<Utc>,
+    pub inserted_at: DateTime<Utc>,
 }
 
 #[derive(Serialize)]
@@ -28,6 +33,7 @@ pub struct BookSummary {
 pub trait BookRepo: Send + Sync {
     fn save_book(&self, book: &Book) -> Uuid;
     fn get_books(&self) -> Vec<BookSummary>;
+    fn get_book_by_id(&self, id: Uuid) -> Option<Book>;
 }
 
 #[derive(Default, Clone)]
@@ -51,5 +57,8 @@ impl BookRepo for InMemoryBookRepo {
                 publisher: book.publisher.clone(),
             })
             .collect()
+    }
+    fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
+        self.map.lock().unwrap().get(&id).cloned()
     }
 }

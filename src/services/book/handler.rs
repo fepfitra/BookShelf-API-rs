@@ -40,5 +40,13 @@ pub async fn create_book(
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
 
-    (StatusCode::CREATED, headers, Json(json!({"id": id})))
+    let body = json!({
+        "status": "success",
+        "message": "Buku berhasil ditambahkan",
+        "data": {
+            "bookId": id
+        }
+    });
+
+    (StatusCode::CREATED, headers, Json(body))
 }

@@ -32,6 +32,12 @@ pub async fn create_book(
         return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
     }
 
+    if params.read_page > params.page_count {
+        let message =
+            "Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount".to_string();
+        return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
+    }
+
     let book = Book {
         id: Uuid::new_v4(),
         name: params.name,

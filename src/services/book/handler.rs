@@ -122,3 +122,86 @@ pub async fn get_book_by_id(
         Err(AppError::ClientFail(StatusCode::NOT_FOUND, message))
     }
 }
+
+pub async fn update_book(
+    State(state): State<BookState>,
+    Path(id): Path<String>,
+    Json(params): Json<BookParams>,
+) -> Result<impl IntoResponse, AppError> {
+    let book_id = match Uuid::parse_str(&id) {
+        Ok(data) => data,
+        Err(_) => {
+            let message = "Gagal memperbarui buku. Id tidak ditemukan".to_string();
+            return Err(AppError::ClientFail(StatusCode::NOT_FOUND, message));
+        }
+    };
+
+    if params.name.is_empty() {
+        let message = "Gagal memperbarui buku. Mohon isi nama buku".to_string();
+        return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
+    }
+
+    if params.read_page > params.page_count {
+        let message =
+            "Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount".to_string();
+        return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
+    }
+
+    if let Some(mut book) = state.repo.get_book_by_id(book_id) {
+        book.name = params.name;
+        book.year = if params.year == 0 {
+            book.year
+        } else {
+            params.year
+        };
+        book.author = if params.author.is_empty() {
+            book.author
+        } else {
+            params.author
+        };
+        book.summary = if params.summary.is_empty() {
+            book.summary
+        } else {
+            params.summary
+        };
+        book.publisher = if params.publisher.is_empty() {
+            book.publisher
+        } else {
+            params.publisher
+        };
+        book.page_count = if params.page_count == 0 {
+            book.page_count
+        } else {
+            params.page_count
+        };
+        book.read_page = if params.read_page == 0 {
+            book.read_page
+        } else {
+            params.read_page
+        };
+        book.reading = if params.reading {
+            params.reading
+        } else {
+            book.reading
+        };
+        book.finished = if params.reading {
+            params.read_page == params.page_count
+        } else {
+            false
+        };
+        book.updated_at = Utc::now();
+
+        state.repo.save_book(&book);
+
+        let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
+        let body = Json(json!({
+            "status": "success",
+            "message": "Buku berhasil diperbarui"
+        }));
+
+        Ok((StatusCode::OK, headers, body))
+    } else {
+        let message = "Gagal memperbarui buku. Id tidak ditemukan".to_string();
+        Err(AppError::ClientFail(StatusCode::NOT_FOUND, message))
+    }
+}

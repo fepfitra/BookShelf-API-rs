@@ -14,7 +14,7 @@ pub use utils::error::AppError;
 mod services;
 use services::book::{
     BookState,
-    handler::{create_book, get_book_by_id, get_books, update_book},
+    handler::{create_book, delete_book, get_book_by_id, get_books, update_book},
     repo::InMemoryBookRepo,
 };
 
@@ -32,7 +32,10 @@ async fn main() {
     let book_repo = InMemoryBookRepo::default();
     let book_router = Router::new()
         .route("/", post(create_book).get(get_books))
-        .route("/{id}", get(get_book_by_id).put(update_book))
+        .route(
+            "/{id}",
+            get(get_book_by_id).put(update_book).delete(delete_book),
+        )
         .with_state(BookState {
             repo: Arc::new(book_repo),
         });

@@ -40,6 +40,9 @@ pub trait BookRepo: Send + Sync {
     fn get_book_by_id(&self, _id: Uuid) -> Option<Book> {
         unimplemented!()
     }
+    fn delete_book(&self, _id: Uuid) -> Uuid {
+        unimplemented!()
+    }
 }
 
 #[derive(Default, Clone)]
@@ -66,5 +69,13 @@ impl BookRepo for InMemoryBookRepo {
     }
     fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
         self.map.lock().unwrap().get(&id).cloned()
+    }
+    fn delete_book(&self, id: Uuid) -> Uuid {
+        self.map
+            .lock()
+            .unwrap()
+            .remove(&id)
+            .map(|book| book.id)
+            .unwrap_or(id)
     }
 }

@@ -205,3 +205,29 @@ pub async fn update_book(
         Err(AppError::ClientFail(StatusCode::NOT_FOUND, message))
     }
 }
+
+pub async fn delete_book(
+    State(state): State<BookState>,
+    Path(id): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    let book_id = match Uuid::parse_str(&id) {
+        Ok(data) => data,
+        Err(_) => {
+            let message = "Buku gagal dihapus. Id tidak ditemukan".to_string();
+            return Err(AppError::ClientFail(StatusCode::NOT_FOUND, message));
+        }
+    };
+
+    let deleted_id = state.repo.delete_book(book_id);
+
+    let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
+    let body = Json(json!({
+        "status": "success",
+        "message": "Buku berhasil dihapus",
+        "data": {
+            "bookId": deleted_id
+        }
+    }));
+
+    Ok((StatusCode::OK, headers, body))
+}

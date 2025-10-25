@@ -1,3 +1,4 @@
+use axum::http::StatusCode;
 use axum::{Json, extract::State};
 use serde::Deserialize;
 use serde_json::json;
@@ -22,7 +23,7 @@ pub struct BookParams {
 pub async fn create_book(
     State(state): State<BookState>,
     Json(params): Json<BookParams>,
-) -> Json<serde_json::Value> {
+) -> (StatusCode, Json<serde_json::Value>) {
     let book = Book {
         id: Uuid::new_v4(),
         name: params.name,
@@ -35,7 +36,10 @@ pub async fn create_book(
         reading: params.reading,
     };
     let id = state.repo.save_book(&book);
-    Json(json!({
-        "id": id
-    }))
+    (
+        StatusCode::CREATED,
+        Json(json!({
+            "id": id
+        })),
+    )
 }

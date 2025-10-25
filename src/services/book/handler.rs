@@ -27,8 +27,10 @@ pub struct BookParams {
     #[allow(dead_code)]
     pub finished: bool,
     #[serde(default)]
+    #[allow(dead_code)]
     pub inserted_at: DateTime<Utc>,
     #[serde(default)]
+    #[allow(dead_code)]
     pub updated_at: DateTime<Utc>,
 }
 

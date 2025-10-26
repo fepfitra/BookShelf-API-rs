@@ -8,9 +8,10 @@ use serde_json::json;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use super::BookState;
-use super::repo::Book;
 use crate::AppError;
+use crate::repos::book::Book;
+
+use super::BookState;
 
 #[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]

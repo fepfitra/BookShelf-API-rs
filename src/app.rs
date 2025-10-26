@@ -8,11 +8,10 @@ use axum::{
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
-use crate::services::book::BookState;
-use crate::services::book::{
-    handler::{create_book, delete_book, get_book_by_id, get_books, update_book},
-    repo::InMemoryBookRepo,
+use crate::services::book::handler::{
+    create_book, delete_book, get_book_by_id, get_books, update_book,
 };
+use crate::{repos::book::inmemory::InMemoryBookRepo, services::book::BookState};
 
 pub fn app() -> Router {
     let book_repo = InMemoryBookRepo::default();

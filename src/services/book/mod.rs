@@ -1,8 +1,8 @@
-use self::repo::BookRepo;
 use std::sync::Arc;
 
+use crate::repos::book::BookRepo;
+
 pub mod handler;
-pub mod repo;
 pub mod test;
 
 #[derive(Clone)]

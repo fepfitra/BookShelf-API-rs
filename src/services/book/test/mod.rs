@@ -9,6 +9,7 @@ use tower::ServiceExt;
 
 pub mod get;
 pub mod post;
+pub mod put;
 
 #[allow(dead_code)]
 pub fn new_book_dummy() -> Value {
@@ -72,5 +73,15 @@ fn build_get_book_by_id_request(id: &str) -> Request<Body> {
         .uri(format!("/books/{}", id))
         .header(header::CONTENT_TYPE, "application/json")
         .body(Body::empty())
+        .unwrap()
+}
+
+#[allow(dead_code)]
+fn build_update_book_request(id: &str, payload: Value) -> Request<Body> {
+    Request::builder()
+        .method(Method::PUT)
+        .uri(format!("/books/{}", id))
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(Body::from(payload.to_string()))
         .unwrap()
 }

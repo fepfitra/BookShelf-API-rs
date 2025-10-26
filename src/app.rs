@@ -9,7 +9,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
 use crate::services::book::{
-    handler::{create_book, delete_book, get_book_by_id, update_book},
+    handler::{create_book, delete_book, get_book_by_id, get_books, update_book},
     repo::InMemoryBookRepo,
 };
 use crate::{root, services::book::BookState};
@@ -17,7 +17,7 @@ use crate::{root, services::book::BookState};
 pub fn app() -> Router {
     let book_repo = InMemoryBookRepo::default();
     let book_router = Router::new()
-        .route("/", post(create_book).get(get_book_by_id))
+        .route("/", post(create_book).get(get_books))
         .route(
             "/{id}",
             get(get_book_by_id).put(update_book).delete(delete_book),

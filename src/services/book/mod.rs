@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 pub mod handler;
 pub mod repo;
+pub mod test;
 
 #[derive(Clone)]
 pub struct BookState {

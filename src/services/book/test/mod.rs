@@ -7,6 +7,7 @@ use axum::{
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
+pub mod del;
 pub mod get;
 pub mod post;
 pub mod put;
@@ -83,5 +84,15 @@ fn build_update_book_request(id: &str, payload: Value) -> Request<Body> {
         .uri(format!("/books/{}", id))
         .header(header::CONTENT_TYPE, "application/json")
         .body(Body::from(payload.to_string()))
+        .unwrap()
+}
+
+#[allow(dead_code)]
+fn build_delete_book_request(id: &str) -> Request<Body> {
+    Request::builder()
+        .method(Method::DELETE)
+        .uri(format!("/books/{}", id))
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(Body::empty())
         .unwrap()
 }

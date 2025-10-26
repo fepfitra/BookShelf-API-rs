@@ -8,11 +8,11 @@ use axum::{
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
+use crate::services::book::BookState;
 use crate::services::book::{
     handler::{create_book, delete_book, get_book_by_id, get_books, update_book},
     repo::InMemoryBookRepo,
 };
-use crate::{root, services::book::BookState};
 
 pub fn app() -> Router {
     let book_repo = InMemoryBookRepo::default();
@@ -26,25 +26,22 @@ pub fn app() -> Router {
             repo: Arc::new(book_repo),
         });
 
-    let app = Router::new()
-        .route("/", get(root))
-        .nest("/books", book_router)
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(|request: &Request<_>| {
-                    let path = request
-                        .extensions()
-                        .get::<MatchedPath>()
-                        .map(MatchedPath::as_str);
+    let app = Router::new().nest("/books", book_router).layer(
+        TraceLayer::new_for_http()
+            .make_span_with(|request: &Request<_>| {
+                let path = request
+                    .extensions()
+                    .get::<MatchedPath>()
+                    .map(MatchedPath::as_str);
 
-                    info_span!(
-                        "http_request",
-                        method = ?request.method(),
-                        path,
-                        some_other_field = tracing::field::Empty,
-                    )
-                })
-                .on_request(()),
-        );
+                info_span!(
+                    "http_request",
+                    method = ?request.method(),
+                    path,
+                    some_other_field = tracing::field::Empty,
+                )
+            })
+            .on_request(()),
+    );
     app
 }

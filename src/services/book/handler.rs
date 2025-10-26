@@ -5,13 +5,14 @@ use axum::{Json, extract::State};
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde_json::json;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use super::BookState;
 use super::repo::Book;
 use crate::AppError;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BookParams {
     #[serde(default)]
@@ -33,13 +34,22 @@ pub struct BookParams {
     #[allow(dead_code)]
     pub updated_at: DateTime<Utc>,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct BooksQuery {
     name: Option<String>,
     reading: Option<String>,
     finished: Option<String>,
 }
 
+#[utoipa::path(
+    post,
+    path = "/books",
+    request_body = BookParams,
+    responses(
+        (status = 201, description = "Buku berhasil ditambahkan"),
+        (status = 400, description = "Gagal menambahkan buku"),
+    )
+)]
 pub async fn create_book(
     State(state): State<BookState>,
     Json(params): Json<BookParams>,
@@ -88,6 +98,18 @@ pub async fn create_book(
     Ok((StatusCode::CREATED, headers, body))
 }
 
+#[utoipa::path(
+    get,
+    path = "/books",
+    params(
+        ("name" = Option<String>, Query, description = "Filter books by name containing the given string"),
+        ("reading" = Option<String>, Query, description = "Filter books by reading status (1 for reading, 0 for not reading)"),
+        ("finished" = Option<String>, Query, description = "Filter books by finished status (1 for finished, 0 for not finished)"),
+    ),
+    responses(
+        (status = 200, description = "List of books retrieved successfully"),
+    )
+)]
 pub async fn get_books(
     State(state): State<BookState>,
     Query(query): Query<BooksQuery>,
@@ -115,6 +137,17 @@ pub async fn get_books(
     (StatusCode::OK, headers, body)
 }
 
+#[utoipa::path(
+    get,
+    path = "/books/{id}",
+    responses(
+        (status = 200, description = "Buku ditemukan"),
+        (status = 404, description = "Buku tidak ditemukan"),
+    ),
+    params(
+        ("id" = String, Path, description = "ID of the book to retrieve"),
+    )
+)]
 pub async fn get_book_by_id(
     State(state): State<BookState>,
     Path(id): Path<String>,
@@ -142,6 +175,19 @@ pub async fn get_book_by_id(
     }
 }
 
+#[utoipa::path(
+    put,
+    path = "/books/{id}",
+    request_body = BookParams,
+    responses(
+        (status = 200, description = "Buku berhasil diperbarui"),
+        (status = 400, description = "Gagal memperbarui buku"),
+        (status = 404, description = "Buku tidak ditemukan"),
+    ),
+    params(
+        ("id" = String, Path, description = "ID of the book to update"),
+    )
+)]
 pub async fn update_book(
     State(state): State<BookState>,
     Path(id): Path<String>,
@@ -225,6 +271,17 @@ pub async fn update_book(
     }
 }
 
+#[utoipa::path(
+    delete,
+    path = "/books/{id}",
+    responses(
+        (status = 200, description = "Buku berhasil dihapus"),
+        (status = 404, description = "Buku gagal dihapus. Id tidak ditemukan"),
+    ),
+    params(
+        ("id" = String, Path, description = "ID of the book to delete"),
+    )
+)]
 pub async fn delete_book(
     State(state): State<BookState>,
     Path(id): Path<String>,

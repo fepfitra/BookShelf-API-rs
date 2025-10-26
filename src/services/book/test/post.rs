@@ -1,48 +1,19 @@
 #[cfg(test)]
 mod add_book_with_complete_data {
-    use axum::{
-        Router,
-        body::Body,
-        http::{Method, Request, StatusCode, header},
-    };
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
-    use serde_json::{Value, json};
-    use tower::{Service, util::ServiceExt};
+    use serde_json::Value;
+    use tower::Service;
 
-    use crate::app::app;
-
-    fn default_book_payload() -> Value {
-        json!({
-            "name": "Buku Baru",
-            "year": 2025,
-            "author": "Penulis Hebat",
-            "summary": "Ringkasan buku...",
-            "publisher": "Penerbit A",
-            "pageCount": 100,
-            "readPage": 10,
-            "reading": false
-        })
-    }
-
-    async fn get_ready_service(app: &mut Router) -> &mut Router {
-        ServiceExt::<Request<Body>>::ready(app)
-            .await
-            .expect("Service should be ready")
-    }
-
-    fn build_create_book_request(payload: Value) -> Request<Body> {
-        Request::builder()
-            .method(Method::POST)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::from(payload.to_string()))
-            .unwrap()
-    }
+    use crate::{
+        app::app,
+        services::book::test::{build_create_book_request, get_ready_service, new_book_dummy},
+    };
 
     #[tokio::test]
     async fn status_should_be_201() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -51,7 +22,7 @@ mod add_book_with_complete_data {
     #[tokio::test]
     async fn response_header_should_be_application_json() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
@@ -63,7 +34,7 @@ mod add_book_with_complete_data {
     #[tokio::test]
     async fn response_body_should_be_an_object() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -74,7 +45,7 @@ mod add_book_with_complete_data {
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -88,48 +59,29 @@ mod add_book_with_complete_data {
 
 #[cfg(test)]
 mod add_book_without_name {
-    use axum::{
-        Router,
-        body::Body,
-        http::{Method, Request, StatusCode, header},
-    };
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
-    use serde_json::{Value, json};
-    use tower::{Service, util::ServiceExt};
+    use serde_json::Value;
+    use tower::Service;
 
-    use crate::app::app;
+    use crate::{
+        app::app,
+        services::book::test::{build_create_book_request, get_ready_service, new_book_dummy},
+    };
 
-    fn default_book_payload() -> Value {
-        json!({
-            "year": 2025,
-            "author": "Penulis Hebat",
-            "summary": "Ringkasan buku...",
-            "publisher": "Penerbit A",
-            "pageCount": 100,
-            "readPage": 10,
-            "reading": false
-        })
-    }
-
-    async fn get_ready_service(app: &mut Router) -> &mut Router {
-        ServiceExt::<Request<Body>>::ready(app)
-            .await
-            .expect("Service should be ready")
-    }
-
-    fn build_create_book_request(payload: Value) -> Request<Body> {
-        Request::builder()
-            .method(Method::POST)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::from(payload.to_string()))
-            .unwrap()
+    fn new_book_no_name() -> Value {
+        let book = new_book_dummy();
+        if let Value::Object(mut book_obj) = book {
+            book_obj.remove("name");
+            return Value::Object(book_obj);
+        }
+        book
     }
 
     #[tokio::test]
     async fn status_should_be_400() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_no_name());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -138,7 +90,7 @@ mod add_book_without_name {
     #[tokio::test]
     async fn response_header_should_be_application_json() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_no_name());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
@@ -150,7 +102,7 @@ mod add_book_without_name {
     #[tokio::test]
     async fn response_body_should_be_an_object() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_no_name());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -161,7 +113,7 @@ mod add_book_without_name {
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_no_name());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -178,49 +130,30 @@ mod add_book_without_name {
 
 #[cfg(test)]
 mod add_book_with_page_more_than_page_count {
-    use axum::{
-        Router,
-        body::Body,
-        http::{Method, Request, StatusCode, header},
-    };
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
     use serde_json::{Value, json};
-    use tower::{Service, util::ServiceExt};
+    use tower::Service;
 
-    use crate::app::app;
+    use crate::{
+        app::app,
+        services::book::test::{build_create_book_request, get_ready_service, new_book_dummy},
+    };
 
-    fn default_book_payload() -> Value {
-        json!({
-            "name": "Buku Baru",
-            "year": 2025,
-            "author": "Penulis Hebat",
-            "summary": "Ringkasan buku...",
-            "publisher": "Penerbit A",
-            "pageCount": 100,
-            "readPage": 110, // readPage lebih besar dari pageCount
-            "reading": false
-        })
-    }
-
-    async fn get_ready_service(app: &mut Router) -> &mut Router {
-        ServiceExt::<Request<Body>>::ready(app)
-            .await
-            .expect("Service should be ready")
-    }
-
-    fn build_create_book_request(payload: Value) -> Request<Body> {
-        Request::builder()
-            .method(Method::POST)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::from(payload.to_string()))
-            .unwrap()
+    fn new_book_overflow_page() -> Value {
+        let book = new_book_dummy();
+        if let Value::Object(mut book_obj) = book {
+            book_obj["pageCount"] = json!(80);
+            book_obj["readPage"] = json!(90);
+            return Value::Object(book_obj);
+        }
+        book
     }
 
     #[tokio::test]
     async fn status_should_be_400() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_overflow_page());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -229,7 +162,7 @@ mod add_book_with_page_more_than_page_count {
     #[tokio::test]
     async fn response_header_should_be_application_json() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_overflow_page());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
@@ -241,7 +174,7 @@ mod add_book_with_page_more_than_page_count {
     #[tokio::test]
     async fn response_body_should_be_an_object() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_overflow_page());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();
@@ -252,7 +185,7 @@ mod add_book_with_page_more_than_page_count {
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
         let mut app = app();
-        let request = build_create_book_request(default_book_payload());
+        let request = build_create_book_request(new_book_overflow_page());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();

@@ -1,52 +1,16 @@
 #[cfg(test)]
 mod get_all_books {
-    use axum::{
-        Router,
-        body::Body,
-        http::{Method, Request, StatusCode, header},
-    };
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
-    use serde_json::{Value, json};
-    use tower::{Service, util::ServiceExt};
+    use serde_json::Value;
+    use tower::Service;
 
-    use crate::app::app;
-
-    fn default_book_payload() -> Value {
-        json!({
-            "name": "Buku Hebat",
-            "year": 2025,
-            "author": "Penulis Hebat",
-            "summary": "Ringkasan buku...",
-            "publisher": "Penerbit A",
-            "pageCount": 100,
-            "readPage": 10,
-            "reading": false
-        })
-    }
-
-    async fn get_ready_service(app: &mut Router) -> &mut Router {
-        ServiceExt::<Request<Body>>::ready(app)
-            .await
-            .expect("Service should be ready")
-    }
-
-    fn build_get_books_request() -> Request<Body> {
-        Request::builder()
-            .method(Method::GET)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::empty())
-            .unwrap()
-    }
-
-    fn build_create_book_request(payload: Value) -> Request<Body> {
-        Request::builder()
-            .method(Method::POST)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::from(payload.to_string()))
-            .unwrap()
-    }
+    use crate::{
+        app::app,
+        services::book::test::{
+            build_create_book_request, build_get_books_request, get_ready_service, new_book_dummy,
+        },
+    };
 
     #[tokio::test]
     async fn response_code_should_be_200() {
@@ -97,8 +61,7 @@ mod get_all_books {
     async fn response_body_data_object_should_have_an_array_books_and_contains_one_items() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -117,8 +80,7 @@ mod get_all_books {
     async fn the_books_should_have_contains_only_id_name_and_publisher_property_and_value() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -142,69 +104,24 @@ mod get_all_books {
 
 #[cfg(test)]
 mod get_detail_books_with_correct_id {
-    use axum::{
-        Router,
-        body::Body,
-        http::{Method, Request, StatusCode, header},
-    };
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
-    use serde_json::{Value, json};
-    use tower::{Service, util::ServiceExt};
+    use serde_json::Value;
+    use tower::Service;
 
-    use crate::app::app;
-
-    fn default_book_payload() -> Value {
-        json!({
-            "name": "Buku Hebat",
-            "year": 2025,
-            "author": "Penulis Hebat",
-            "summary": "Ringkasan buku...",
-            "publisher": "Penerbit A",
-            "pageCount": 100,
-            "readPage": 10,
-            "reading": false
-        })
-    }
-
-    async fn get_ready_service(app: &mut Router) -> &mut Router {
-        ServiceExt::<Request<Body>>::ready(app)
-            .await
-            .expect("Service should be ready")
-    }
-
-    fn build_get_books_request() -> Request<Body> {
-        Request::builder()
-            .method(Method::GET)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::empty())
-            .unwrap()
-    }
-
-    fn build_create_book_request(payload: Value) -> Request<Body> {
-        Request::builder()
-            .method(Method::POST)
-            .uri("/books")
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::from(payload.to_string()))
-            .unwrap()
-    }
-
-    fn build_get_book_by_id_request(id: &str) -> Request<Body> {
-        Request::builder()
-            .method(Method::GET)
-            .uri(format!("/books/{}", id))
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::empty())
-            .unwrap()
-    }
+    use crate::{
+        app::app,
+        services::book::test::{
+            build_create_book_request, build_get_book_by_id_request, build_get_books_request,
+            get_ready_service, new_book_dummy,
+        },
+    };
 
     #[tokio::test]
     async fn responce_code_should_be_200() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -225,8 +142,7 @@ mod get_detail_books_with_correct_id {
     async fn response_header_should_be_application_json() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -250,8 +166,7 @@ mod get_detail_books_with_correct_id {
     async fn response_body_should_be_an_object() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -275,8 +190,7 @@ mod get_detail_books_with_correct_id {
     async fn response_body_should_have_correct_property_and_value() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -301,8 +215,7 @@ mod get_detail_books_with_correct_id {
     async fn response_body_data_object_should_contain_book_object() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
-        let request = build_create_book_request(book_payload);
+        let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -326,7 +239,7 @@ mod get_detail_books_with_correct_id {
     async fn the_book_object_should_have_correct_property_and_value() {
         let mut app = app();
 
-        let book_payload = default_book_payload();
+        let book_payload = new_book_dummy();
         let request = build_create_book_request(book_payload.clone());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -359,36 +272,28 @@ mod get_detail_books_with_correct_id {
 
 #[cfg(test)]
 mod get_detail_books_with_invalid_id {
-    use axum::{
-        Router,
-        body::Body,
-        http::{Method, Request, StatusCode, header},
-    };
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
-    use serde_json::{Value, json};
-    use tower::{Service, util::ServiceExt};
+    use serde_json::Value;
+    use tower::Service;
 
-    use crate::app::app;
-
-    async fn get_ready_service(app: &mut Router) -> &mut Router {
-        ServiceExt::<Request<Body>>::ready(app)
-            .await
-            .expect("Service should be ready")
-    }
-
-    fn build_get_book_by_id_request(id: &str) -> Request<Body> {
-        Request::builder()
-            .method(Method::GET)
-            .uri(format!("/books/{}", id))
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(Body::empty())
-            .unwrap()
-    }
+    use crate::{
+        app::app,
+        services::book::test::{
+            build_create_book_request, build_get_book_by_id_request, get_ready_service,
+            new_book_dummy,
+        },
+    };
 
     #[tokio::test]
     async fn response_code_should_be_404() {
         let mut app = app();
-        let request = build_get_book_by_id_request("invalid-id");
+        let request = build_create_book_request(new_book_dummy());
+        let ready_service = get_ready_service(&mut app).await;
+        let response = ready_service.call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let request = build_get_book_by_id_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -397,7 +302,12 @@ mod get_detail_books_with_invalid_id {
     #[tokio::test]
     async fn response_header_should_be_application_json() {
         let mut app = app();
-        let request = build_get_book_by_id_request("invalid-id");
+        let request = build_create_book_request(new_book_dummy());
+        let ready_service = get_ready_service(&mut app).await;
+        let response = ready_service.call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let request = build_get_book_by_id_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
@@ -409,6 +319,11 @@ mod get_detail_books_with_invalid_id {
     #[tokio::test]
     async fn response_body_should_be_an_object() {
         let mut app = app();
+        let request = build_create_book_request(new_book_dummy());
+        let ready_service = get_ready_service(&mut app).await;
+        let response = ready_service.call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+
         let request = build_get_book_by_id_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -420,7 +335,12 @@ mod get_detail_books_with_invalid_id {
     #[tokio::test]
     async fn response_body_object_should_contain_correct_property_and_value() {
         let mut app = app();
-        let request = build_get_book_by_id_request("invalid-id");
+        let request = build_create_book_request(new_book_dummy());
+        let ready_service = get_ready_service(&mut app).await;
+        let response = ready_service.call(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let request = build_get_book_by_id_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         let body = response.into_body().collect().await.unwrap().to_bytes();

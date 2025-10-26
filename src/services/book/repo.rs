@@ -34,7 +34,12 @@ pub trait BookRepo: Send + Sync {
     fn save_book(&self, _book: &Book) -> Uuid {
         unimplemented!()
     }
-    fn get_books(&self) -> Vec<BookSummary> {
+    fn get_books(
+        &self,
+        _name: Option<String>,
+        _reading: Option<bool>,
+        _finished: Option<bool>,
+    ) -> Vec<BookSummary> {
         unimplemented!()
     }
     fn get_book_by_id(&self, _id: Uuid) -> Option<Book> {
@@ -55,11 +60,32 @@ impl BookRepo for InMemoryBookRepo {
         self.map.lock().unwrap().insert(book.id, book.clone());
         book.id
     }
-    fn get_books(&self) -> Vec<BookSummary> {
-        self.map
-            .lock()
-            .unwrap()
-            .values()
+    fn get_books(
+        &self,
+        name: Option<String>,
+        reading: Option<bool>,
+        finished: Option<bool>,
+    ) -> Vec<BookSummary> {
+        let map = self.map.lock().unwrap();
+        let mut books: Vec<_> = map.values().collect();
+
+        if let Some(name_filter) = &name {
+            books.retain(|book| {
+                book.name
+                    .to_lowercase()
+                    .contains(&name_filter.to_lowercase())
+            });
+        }
+        if let Some(reading_filter) = reading {
+            books.retain(|book| book.reading == reading_filter);
+        }
+
+        if let Some(finished_filter) = finished {
+            books.retain(|book| book.finished == finished_filter);
+        }
+
+        books
+            .into_iter()
             .map(|book| BookSummary {
                 id: book.id,
                 name: book.name.clone(),

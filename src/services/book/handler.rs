@@ -1,4 +1,4 @@
-use axum::extract::Path;
+use axum::extract::{Path, Query};
 use axum::http::{StatusCode, header};
 use axum::response::IntoResponse;
 use axum::{Json, extract::State};
@@ -32,6 +32,12 @@ pub struct BookParams {
     #[serde(default)]
     #[allow(dead_code)]
     pub updated_at: DateTime<Utc>,
+}
+#[derive(Deserialize)]
+pub struct BooksQuery {
+    name: Option<String>,
+    reading: Option<String>,
+    finished: Option<String>,
 }
 
 pub async fn create_book(
@@ -82,8 +88,21 @@ pub async fn create_book(
     Ok((StatusCode::CREATED, headers, body))
 }
 
-pub async fn get_books(State(state): State<BookState>) -> impl IntoResponse {
-    let books = state.repo.get_books();
+pub async fn get_books(
+    State(state): State<BookState>,
+    Query(query): Query<BooksQuery>,
+) -> impl IntoResponse {
+    let reading = query
+        .reading
+        .and_then(|s| s.parse::<u8>().ok())
+        .map(|n| n == 1);
+    let finished = query
+        .finished
+        .and_then(|s| s.parse::<u8>().ok())
+        .map(|n| n == 1);
+    let name = query.name;
+
+    let books = state.repo.get_books(name, reading, finished);
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
     let body = Json(json!({

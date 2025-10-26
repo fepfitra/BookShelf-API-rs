@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod delete_book_with_correct_id {
-    use axum::http::{StatusCode, header, request, response};
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
     use serde_json::Value;
     use tower::Service;

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod update_book_with_complete_data {
-    use axum::http::StatusCode;
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
     use tower::Service;
 
@@ -46,7 +46,7 @@ mod update_book_with_complete_data {
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
-            response.headers().get("content-type").unwrap(),
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
             "application/json; charset=utf-8"
         );
     }
@@ -133,7 +133,7 @@ mod update_book_with_complete_data {
 
 #[cfg(test)]
 mod update_book_without_name {
-    use axum::http::StatusCode;
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
     use tower::Service;
 
@@ -188,7 +188,7 @@ mod update_book_without_name {
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
-            response.headers().get("content-type").unwrap(),
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
             "application/json; charset=utf-8"
         );
     }
@@ -242,7 +242,7 @@ mod update_book_without_name {
 
 #[cfg(test)]
 mod update_book_with_page_read_more_than_page_count {
-    use axum::http::StatusCode;
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
     use tower::Service;
 
@@ -297,7 +297,7 @@ mod update_book_with_page_read_more_than_page_count {
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
-            response.headers().get("content-type").unwrap(),
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
             "application/json; charset=utf-8"
         );
     }
@@ -351,7 +351,7 @@ mod update_book_with_page_read_more_than_page_count {
 
 #[cfg(test)]
 mod update_book_with_invalid_id {
-    use axum::http::StatusCode;
+    use axum::http::{StatusCode, header};
     use http_body_util::BodyExt;
     use tower::Service;
 
@@ -389,7 +389,7 @@ mod update_book_with_invalid_id {
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
         assert_eq!(
-            response.headers().get("content-type").unwrap(),
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
             "application/json; charset=utf-8"
         );
     }

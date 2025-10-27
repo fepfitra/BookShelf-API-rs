@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use axum::http::StatusCode;
 use sqlx::{Row, sqlite::SqlitePool};
 use std::ops::DerefMut;
 use uuid::Uuid;
@@ -140,13 +141,17 @@ impl BookRepo for SqliteBookRepo {
     }
 
     async fn delete_book(&self, id: Uuid) -> Result<Uuid, AppError> {
-        let pool = &self.0;
-        sqlx::query("DELETE FROM books WHERE id = ?")
-            .bind(id.to_string())
-            .execute(pool)
+        let result = sqlx::query("DELETE FROM books WHERE id = ?")
+            .bind(id)
+            .execute(&self.0)
             .await
             .map_err(|_e| AppError::DatabaseError)?;
 
-        Ok(id)
+        if result.rows_affected() == 0 {
+            let message = "Buku gagal dihapus. Id tidak ditemukan".to_string();
+            Err(AppError::ClientFail(StatusCode::NOT_FOUND, message))
+        } else {
+            Ok(id)
+        }
     }
 }

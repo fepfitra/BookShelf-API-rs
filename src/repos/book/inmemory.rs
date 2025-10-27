@@ -7,13 +7,11 @@ use uuid::Uuid;
 use super::{Book, BookRepo, BookSummary};
 
 #[derive(Default, Clone)]
-pub struct InMemoryBookRepo {
-    map: Arc<Mutex<HashMap<Uuid, Book>>>,
-}
+pub struct InMemoryBookRepo(Arc<Mutex<HashMap<Uuid, Book>>>);
 
 impl BookRepo for InMemoryBookRepo {
     fn save_book(&self, book: &Book) -> Uuid {
-        self.map.lock().unwrap().insert(book.id, book.clone());
+        self.0.lock().unwrap().insert(book.id, book.clone());
         book.id
     }
     fn get_books(
@@ -22,8 +20,8 @@ impl BookRepo for InMemoryBookRepo {
         reading: Option<bool>,
         finished: Option<bool>,
     ) -> Vec<BookSummary> {
-        let map = self.map.lock().unwrap();
-        let mut books: Vec<_> = map.values().collect();
+        let data = self.0.lock().unwrap();
+        let mut books: Vec<_> = data.values().collect();
 
         if let Some(name_filter) = &name {
             books.retain(|book| {
@@ -50,10 +48,10 @@ impl BookRepo for InMemoryBookRepo {
             .collect()
     }
     fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
-        self.map.lock().unwrap().get(&id).cloned()
+        self.0.lock().unwrap().get(&id).cloned()
     }
     fn delete_book(&self, id: Uuid) -> Uuid {
-        self.map
+        self.0
             .lock()
             .unwrap()
             .remove(&id)

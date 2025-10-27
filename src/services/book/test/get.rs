@@ -14,7 +14,7 @@ mod get_all_books {
 
     #[tokio::test]
     async fn response_code_should_be_200() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_get_books_request();
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -23,7 +23,7 @@ mod get_all_books {
 
     #[tokio::test]
     async fn response_header_should_be_application_json() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_get_books_request();
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -35,7 +35,7 @@ mod get_all_books {
 
     #[tokio::test]
     async fn response_body_should_be_an_object() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_get_books_request();
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -46,7 +46,7 @@ mod get_all_books {
 
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_get_books_request();
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -59,7 +59,7 @@ mod get_all_books {
 
     #[tokio::test]
     async fn response_body_data_object_should_have_an_array_books_and_contains_one_items() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -78,7 +78,7 @@ mod get_all_books {
 
     #[tokio::test]
     async fn the_books_should_have_contains_only_id_name_and_publisher_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -119,7 +119,7 @@ mod get_detail_books_with_correct_id {
 
     #[tokio::test]
     async fn responce_code_should_be_200() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -140,7 +140,7 @@ mod get_detail_books_with_correct_id {
 
     #[tokio::test]
     async fn response_header_should_be_application_json() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -164,7 +164,7 @@ mod get_detail_books_with_correct_id {
 
     #[tokio::test]
     async fn response_body_should_be_an_object() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -188,7 +188,7 @@ mod get_detail_books_with_correct_id {
 
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -213,7 +213,7 @@ mod get_detail_books_with_correct_id {
 
     #[tokio::test]
     async fn response_body_data_object_should_contain_book_object() {
-        let mut app = app();
+        let mut app = app().await;
 
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
@@ -237,7 +237,7 @@ mod get_detail_books_with_correct_id {
 
     #[tokio::test]
     async fn the_book_object_should_have_correct_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
 
         let book_payload = new_book_dummy();
         let request = build_create_book_request(book_payload.clone());
@@ -287,7 +287,7 @@ mod get_detail_books_with_invalid_id {
 
     #[tokio::test]
     async fn response_code_should_be_404() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -301,7 +301,7 @@ mod get_detail_books_with_invalid_id {
 
     #[tokio::test]
     async fn response_header_should_be_application_json() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -318,7 +318,7 @@ mod get_detail_books_with_invalid_id {
 
     #[tokio::test]
     async fn response_body_should_be_an_object() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -334,7 +334,7 @@ mod get_detail_books_with_invalid_id {
 
     #[tokio::test]
     async fn response_body_object_should_contain_correct_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();

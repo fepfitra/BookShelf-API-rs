@@ -14,7 +14,7 @@ mod delete_book_with_correct_id {
 
     #[tokio::test]
     async fn status_should_be_200() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -30,7 +30,7 @@ mod delete_book_with_correct_id {
 
     #[tokio::test]
     async fn response_header_should_be_json() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -47,7 +47,7 @@ mod delete_book_with_correct_id {
 
     #[tokio::test]
     async fn response_body_should_be_an_object() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -65,7 +65,7 @@ mod delete_book_with_correct_id {
 
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -85,7 +85,7 @@ mod delete_book_with_correct_id {
 
     #[tokio::test]
     async fn when_get_detail_books_the_book_should_not_found() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_create_book_request(new_book_dummy());
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -117,7 +117,7 @@ mod delete_book_with_incorrect_id {
 
     #[tokio::test]
     async fn status_should_be_404() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_delete_book_request("incorrect-id");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -126,7 +126,7 @@ mod delete_book_with_incorrect_id {
 
     #[tokio::test]
     async fn response_header_should_be_json() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_delete_book_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -136,7 +136,7 @@ mod delete_book_with_incorrect_id {
 
     #[tokio::test]
     async fn response_body_should_be_an_object() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_delete_book_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();
@@ -147,7 +147,7 @@ mod delete_book_with_incorrect_id {
 
     #[tokio::test]
     async fn response_body_should_have_correct_property_and_value() {
-        let mut app = app();
+        let mut app = app().await;
         let request = build_delete_book_request("xxxxxx");
         let ready_service = get_ready_service(&mut app).await;
         let response = ready_service.call(request).await.unwrap();

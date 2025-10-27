@@ -1,6 +1,5 @@
 use axum::{
     Json,
-    extract::rejection::PathRejection,
     http::{StatusCode, header},
     response::{IntoResponse, Response},
 };
@@ -29,12 +28,5 @@ impl IntoResponse for AppError {
             )
                 .into_response(),
         }
-    }
-}
-
-impl From<PathRejection> for AppError {
-    fn from(_rejection: PathRejection) -> Self {
-        let message = "Buku tidak ditemukan".to_string();
-        AppError::ClientFail(StatusCode::NOT_FOUND, message)
     }
 }

@@ -151,9 +151,14 @@ pub async fn get_books(
 )]
 pub async fn get_book_by_id(
     State(state): State<BookState>,
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
 ) -> Result<impl IntoResponse, AppError> {
-    if let Ok(Some(book)) = state.repo.get_book_by_id(id).await {
+    let book_id = Uuid::parse_str(&id).map_err(|_| {
+        let message = "Buku tidak ditemukan".to_string();
+        AppError::ClientFail(StatusCode::NOT_FOUND, message)
+    })?;
+
+    if let Ok(Some(book)) = state.repo.get_book_by_id(book_id).await {
         let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
         let body = Json(json!({
             "status": "success",
@@ -184,9 +189,14 @@ pub async fn get_book_by_id(
 )]
 pub async fn update_book(
     State(state): State<BookState>,
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
     Json(params): Json<BookParams>,
 ) -> Result<impl IntoResponse, AppError> {
+    let book_id = Uuid::parse_str(&id).map_err(|_| {
+        let message = "Gagal memperbarui buku. Id tidak ditemukan".to_string();
+        AppError::ClientFail(StatusCode::NOT_FOUND, message)
+    })?;
+
     if params.name.is_empty() {
         let message = "Gagal memperbarui buku. Mohon isi nama buku".to_string();
         return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
@@ -198,7 +208,7 @@ pub async fn update_book(
         return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
     }
 
-    if let Ok(Some(mut book)) = state.repo.get_book_by_id(id).await {
+    if let Ok(Some(mut book)) = state.repo.get_book_by_id(book_id).await {
         book.name = params.name;
         book.year = if params.year == 0 {
             book.year
@@ -270,9 +280,14 @@ pub async fn update_book(
 )]
 pub async fn delete_book(
     State(state): State<BookState>,
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
 ) -> Result<impl IntoResponse, AppError> {
-    let deleted_id = state.repo.delete_book(id).await?;
+    let book_id = Uuid::parse_str(&id).map_err(|_| {
+        let message = "Buku gagal dihapus. Id tidak ditemukan".to_string();
+        AppError::ClientFail(StatusCode::NOT_FOUND, message)
+    })?;
+
+    let deleted_id = state.repo.delete_book(book_id).await?;
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
     let body = Json(json!({

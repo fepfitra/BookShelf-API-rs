@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use axum::http::StatusCode;
+use chrono::{DateTime, Utc};
 use sqlx::{Row, sqlite::SqlitePool};
 use std::ops::DerefMut;
 use uuid::Uuid;
@@ -127,22 +128,57 @@ impl BookRepo for SqliteBookRepo {
     }
 
     async fn get_book_by_id(&self, id: Uuid) -> Result<Option<Book>, AppError> {
+        // let pool = &self.0;
+        // let book: Option<Book> = sqlx::query_as(
+        //     r#"
+        //     SELECT id, name, year, author, summary, publisher, page_count, read_page
+        //     FROM books WHERE id = ?
+        //     "#,
+        // ).bind(id.to_string()).fetch_optional(pool)
+        //     .await
+        //     .map_err(|_e| AppError::DatabaseError)?;
+        //
+        // Ok(book)
         let pool = &self.0;
-        let book: Option<Book> = sqlx::query_as(
+        let row = sqlx::query(
             r#"
             SELECT id, name, year, author, summary, publisher, page_count, read_page, reading, finished, updated_at, inserted_at
             FROM books WHERE id = ?
             "#,
-        ).bind(id.to_string()).fetch_optional(pool)
-            .await
-            .map_err(|_e| AppError::DatabaseError)?;
-
-        Ok(book)
+        )
+        .bind(id.to_string())
+        .fetch_optional(pool)
+        .await
+        .map_err(|_e| AppError::DatabaseError)?;
+        if let Some(row) = row {
+            let book = Book {
+                id: Uuid::parse_str(row.get::<String, _>("id").as_str())
+                    .map_err(|_e| AppError::DatabaseError)?,
+                name: row.get("name"),
+                year: row.get("year"),
+                author: row.get("author"),
+                summary: row.get("summary"),
+                publisher: row.get("publisher"),
+                page_count: row.get("page_count"),
+                read_page: row.get("read_page"),
+                reading: row.get("reading"),
+                finished: row.get("finished"),
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("updated_at"))
+                    .map_err(|_e| AppError::DatabaseError)?
+                    .with_timezone(&Utc),
+                inserted_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("inserted_at"))
+                    .map_err(|_e| AppError::DatabaseError)?
+                    .with_timezone(&Utc),
+            };
+            Ok(Some(book))
+        } else {
+            Ok(None)
+        }
     }
 
     async fn delete_book(&self, id: Uuid) -> Result<Uuid, AppError> {
         let result = sqlx::query("DELETE FROM books WHERE id = ?")
-            .bind(id)
+            .bind(id.to_string())
             .execute(&self.0)
             .await
             .map_err(|_e| AppError::DatabaseError)?;

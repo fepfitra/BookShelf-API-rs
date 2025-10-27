@@ -198,7 +198,7 @@ pub async fn update_book(
         return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
     }
 
-    if let Ok(Some(mut book)) = state.repo.get_book_by_id(book_id).await {
+    if let Ok(Some(mut book)) = state.repo.get_book_by_id(id).await {
         book.name = params.name;
         book.year = if params.year == 0 {
             book.year

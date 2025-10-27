@@ -115,7 +115,7 @@ impl BookRepo for SqliteBookRepo {
                     id: row
                         .get::<String, _>("id")
                         .parse()
-                        .map_err(|_e| AppError::DatabaseError)?, // This ? is now fine
+                        .map_err(|_e| AppError::DatabaseError)?,
                     name: row.get("name"),
                     publisher: row.get("publisher"),
                 })
@@ -127,40 +127,16 @@ impl BookRepo for SqliteBookRepo {
 
     async fn get_book_by_id(&self, id: Uuid) -> Result<Option<Book>, AppError> {
         let pool = &self.0;
-        let book = sqlx::query("SELECT * FROM books WHERE id = ?")
-            .bind(id.to_string())
-            .fetch_optional(pool)
+        let book: Option<Book> = sqlx::query_as(
+            r#"
+            SELECT id, name, year, author, summary, publisher, page_count, read_page, reading, finished, updated_at, inserted_at
+            FROM books WHERE id = ?
+            "#,
+        ).bind(id.to_string()).fetch_optional(pool)
             .await
             .map_err(|_e| AppError::DatabaseError)?;
 
-        let book = match book {
-            Some(row) => Book {
-                id: row
-                    .get::<String, _>("id")
-                    .parse()
-                    .map_err(|_e| AppError::DatabaseError)?,
-                name: row.get("name"),
-                year: row.get("year"),
-                author: row.get("author"),
-                summary: row.get("summary"),
-                publisher: row.get("publisher"),
-                page_count: row.get("page_count"),
-                read_page: row.get("read_page"),
-                reading: row.get("reading"),
-                finished: row.get("finished"),
-                updated_at: row
-                    .get::<String, _>("updated_at")
-                    .parse()
-                    .map_err(|_e| AppError::DatabaseError)?,
-                inserted_at: row
-                    .get::<String, _>("inserted_at")
-                    .parse()
-                    .map_err(|_e| AppError::DatabaseError)?,
-            },
-            None => return Ok(None),
-        };
-
-        Ok(Some(book))
+        Ok(book)
     }
 
     async fn delete_book(&self, id: Uuid) -> Result<Uuid, AppError> {

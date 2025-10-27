@@ -8,7 +8,7 @@ use crate::AppError;
 pub mod inmemory;
 pub mod sqlite;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Book {
     pub id: Uuid,

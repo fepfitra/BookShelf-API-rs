@@ -8,7 +8,13 @@ use axum::{
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
-use crate::{repos::book::inmemory::InMemoryBookRepo, services::book::BookState};
+use crate::{
+    repos::book::inmemory::InMemoryBookRepo,
+    services::{
+        auth::handler::{authorize, protected},
+        book::BookState,
+    },
+};
 use crate::{
     repos::book::sqlite::SqliteBookRepo,
     services::book::handler::{create_book, delete_book, get_book_by_id, get_books, update_book},
@@ -26,23 +32,27 @@ pub async fn app() -> Router {
         .with_state(BookState {
             repo: Arc::new(sqlite_book_repo),
         });
+    let auth_router = Router::new().route("/", post(authorize).get(protected));
 
-    let app = Router::new().nest("/books", book_router).layer(
-        TraceLayer::new_for_http()
-            .make_span_with(|request: &Request<_>| {
-                let path = request
-                    .extensions()
-                    .get::<MatchedPath>()
-                    .map(MatchedPath::as_str);
+    let app = Router::new()
+        .nest("/auth", auth_router)
+        .nest("/books", book_router)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<_>| {
+                    let path = request
+                        .extensions()
+                        .get::<MatchedPath>()
+                        .map(MatchedPath::as_str);
 
-                info_span!(
-                    "http_request",
-                    method = ?request.method(),
-                    path,
-                    some_other_field = tracing::field::Empty,
-                )
-            })
-            .on_request(()),
-    );
+                    info_span!(
+                        "http_request",
+                        method = ?request.method(),
+                        path,
+                        some_other_field = tracing::field::Empty,
+                    )
+                })
+                .on_request(()),
+        );
     app
 }

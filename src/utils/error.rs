@@ -9,6 +9,10 @@ use serde_json::json;
 pub enum AppError {
     ClientFail(StatusCode, String),
     DatabaseError,
+    WrongCredentials,
+    MissingCredentials,
+    TokenCreation,
+    InvalidToken,
 }
 
 impl IntoResponse for AppError {
@@ -25,6 +29,30 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 headers,
                 Json(json!({"status": "error", "message": "Database error"})),
+            )
+                .into_response(),
+            AppError::WrongCredentials => (
+                StatusCode::UNAUTHORIZED,
+                headers,
+                Json(json!({"status": "fail", "message": "Wrong credentials"})),
+            )
+                .into_response(),
+            AppError::MissingCredentials => (
+                StatusCode::UNAUTHORIZED,
+                headers,
+                Json(json!({"status": "fail", "message": "Missing credentials"})),
+            )
+                .into_response(),
+            AppError::TokenCreation => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                headers,
+                Json(json!({"status": "error", "message": "Token creation error"})),
+            )
+                .into_response(),
+            AppError::InvalidToken => (
+                StatusCode::UNAUTHORIZED,
+                headers,
+                Json(json!({"status": "fail", "message": "Invalid token"})),
             )
                 .into_response(),
         }

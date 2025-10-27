@@ -21,7 +21,9 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let app = app().merge(SwaggerUi::new("/").url("/api-docs/openapi.json", ApiDoc::openapi()));
+    let app = app()
+        .await
+        .merge(SwaggerUi::new("/").url("/api-docs/openapi.json", ApiDoc::openapi()));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:5000")
         .await

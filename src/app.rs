@@ -8,13 +8,15 @@ use axum::{
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
-use crate::services::book::handler::{
-    create_book, delete_book, get_book_by_id, get_books, update_book,
-};
 use crate::{repos::book::inmemory::InMemoryBookRepo, services::book::BookState};
+use crate::{
+    repos::book::sqlite::SqliteBookRepo,
+    services::book::handler::{create_book, delete_book, get_book_by_id, get_books, update_book},
+};
 
-pub fn app() -> Router {
-    let book_repo = InMemoryBookRepo::default();
+pub async fn app() -> Router {
+    let _inmemory_book_repo = InMemoryBookRepo::default();
+    let sqlite_book_repo = SqliteBookRepo::new("sqlite::memory:".to_string()).await;
     let book_router = Router::new()
         .route("/", post(create_book).get(get_books))
         .route(
@@ -22,7 +24,7 @@ pub fn app() -> Router {
             get(get_book_by_id).put(update_book).delete(delete_book),
         )
         .with_state(BookState {
-            repo: Arc::new(book_repo),
+            repo: Arc::new(sqlite_book_repo),
         });
 
     let app = Router::new().nest("/books", book_router).layer(

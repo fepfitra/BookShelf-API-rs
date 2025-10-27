@@ -4,6 +4,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 pub mod inmemory;
+pub mod sqlite;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]

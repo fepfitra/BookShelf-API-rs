@@ -3,6 +3,8 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
+use crate::AppError;
+
 use super::{Book, BookRepo, BookSummary};
 
 #[derive(Default, Clone)]
@@ -10,16 +12,16 @@ pub struct InMemoryBookRepo(Arc<Mutex<HashMap<Uuid, Book>>>);
 
 #[async_trait]
 impl BookRepo for InMemoryBookRepo {
-    async fn save_book(&self, book: &Book) -> Uuid {
+    async fn save_book(&self, book: &Book) -> Result<Uuid, AppError> {
         self.0.lock().await.insert(book.id, book.clone());
-        book.id
+        Ok(book.id)
     }
     async fn get_books(
         &self,
         name: Option<String>,
         reading: Option<bool>,
         finished: Option<bool>,
-    ) -> Vec<BookSummary> {
+    ) -> Result<Vec<BookSummary>, AppError> {
         let data = self.0.lock().await;
         let mut books: Vec<_> = data.values().collect();
 
@@ -38,24 +40,25 @@ impl BookRepo for InMemoryBookRepo {
             books.retain(|book| book.finished == finished_filter);
         }
 
-        books
+        Ok(books
             .into_iter()
             .map(|book| BookSummary {
                 id: book.id,
                 name: book.name.clone(),
                 publisher: book.publisher.clone(),
             })
-            .collect()
+            .collect())
     }
-    async fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
-        self.0.lock().await.get(&id).cloned()
+    async fn get_book_by_id(&self, id: Uuid) -> Result<Option<Book>, AppError> {
+        Ok(self.0.lock().await.get(&id).cloned())
     }
-    async fn delete_book(&self, id: Uuid) -> Uuid {
-        self.0
+    async fn delete_book(&self, id: Uuid) -> Result<Uuid, AppError> {
+        Ok(self
+            .0
             .lock()
             .await
             .remove(&id)
             .map(|book| book.id)
-            .unwrap_or(id)
+            .unwrap_or(id))
     }
 }

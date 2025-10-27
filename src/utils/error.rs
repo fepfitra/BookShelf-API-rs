@@ -8,6 +8,7 @@ use serde_json::json;
 #[derive(Debug)]
 pub enum AppError {
     ClientFail(StatusCode, String),
+    DatabaseError,
 }
 
 impl IntoResponse for AppError {
@@ -20,7 +21,12 @@ impl IntoResponse for AppError {
                 Json(json!({"status": "fail", "message": message})),
             )
                 .into_response(),
+            AppError::DatabaseError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                headers,
+                Json(json!({"status": "error", "message": "Database error"})),
+            )
+                .into_response(),
         }
     }
 }
-

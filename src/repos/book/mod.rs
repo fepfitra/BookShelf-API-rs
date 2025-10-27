@@ -3,6 +3,8 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use uuid::Uuid;
 
+use crate::AppError;
+
 pub mod inmemory;
 pub mod sqlite;
 
@@ -32,7 +34,7 @@ pub struct BookSummary {
 
 #[async_trait]
 pub trait BookRepo: Send + Sync {
-    async fn save_book(&self, _book: &Book) -> Uuid {
+    async fn save_book(&self, _book: &Book) -> Result<Uuid, AppError> {
         unimplemented!()
     }
     async fn get_books(
@@ -40,13 +42,13 @@ pub trait BookRepo: Send + Sync {
         _name: Option<String>,
         _reading: Option<bool>,
         _finished: Option<bool>,
-    ) -> Vec<BookSummary> {
+    ) -> Result<Vec<BookSummary>, AppError> {
         unimplemented!()
     }
-    async fn get_book_by_id(&self, _id: Uuid) -> Option<Book> {
+    async fn get_book_by_id(&self, _id: Uuid) -> Result<Option<Book>, AppError> {
         unimplemented!()
     }
-    async fn delete_book(&self, _id: Uuid) -> Uuid {
+    async fn delete_book(&self, _id: Uuid) -> Result<Uuid, AppError> {
         unimplemented!()
     }
 }

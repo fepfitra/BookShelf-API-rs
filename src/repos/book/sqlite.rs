@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use chrono::Utc;
 use sqlx::{Row, sqlite::SqlitePool};
 use std::{
     ops::{Deref, DerefMut},
@@ -7,6 +6,8 @@ use std::{
 };
 use tokio::sync::Mutex;
 use uuid::Uuid;
+
+use crate::AppError;
 
 use super::{Book, BookRepo, BookSummary};
 #[derive(Clone)]
@@ -41,7 +42,7 @@ impl SqliteBookRepo {
         )
         .execute(conn.deref_mut())
         .await
-        .expect("Failed to create books table");
+        .expect("Failed to initialize database");
 
         SqliteBookRepo(Arc::new(Mutex::new(pool)))
     }
@@ -49,7 +50,7 @@ impl SqliteBookRepo {
 
 #[async_trait]
 impl BookRepo for SqliteBookRepo {
-    async fn save_book(&self, book: &super::Book) -> uuid::Uuid {
+    async fn save_book(&self, book: &super::Book) -> Result<Uuid, AppError> {
         let pool = self.0.lock().await;
         sqlx::query(
             r#"
@@ -71,9 +72,9 @@ impl BookRepo for SqliteBookRepo {
         .bind(book.updated_at.to_rfc3339())
         .bind(book.inserted_at.to_rfc3339())
         .execute(pool.deref())
-        .await.expect("Failed to insert or update book");
+        .await.map_err(|_e| AppError::DatabaseError)?;
 
-        book.id
+        Ok(book.id)
     }
 
     async fn get_books(
@@ -81,7 +82,7 @@ impl BookRepo for SqliteBookRepo {
         name: Option<String>,
         reading: Option<bool>,
         finished: Option<bool>,
-    ) -> Vec<BookSummary> {
+    ) -> Result<Vec<BookSummary>, AppError> {
         let pool = self.0.lock().await;
 
         let mut query = "SELECT id, name, publisher FROM books WHERE 1=1".to_string();
@@ -110,27 +111,38 @@ impl BookRepo for SqliteBookRepo {
         let books = query_builder
             .fetch_all(pool.deref())
             .await
-            .expect("Failed to fetch books")
+            .map_err(|_e| AppError::DatabaseError)?
             .iter()
-            .map(|row| BookSummary {
-                id: row.get::<String, _>("id").parse().unwrap(),
-                name: row.get("name"),
-                publisher: row.get("publisher"),
+            .map(|row| {
+                // Note the braces and Ok()
+                Ok(BookSummary {
+                    id: row
+                        .get::<String, _>("id")
+                        .parse()
+                        .map_err(|_e| AppError::DatabaseError)?, // This ? is now fine
+                    name: row.get("name"),
+                    publisher: row.get("publisher"),
+                })
             })
-            .collect();
+            .collect::<Result<Vec<BookSummary>, AppError>>()?;
 
-        books
+        Ok(books)
     }
 
-    async fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
+    async fn get_book_by_id(&self, id: Uuid) -> Result<Option<Book>, AppError> {
         let pool = self.0.lock().await;
         let book = sqlx::query("SELECT * FROM books WHERE id = ?")
             .bind(id.to_string())
             .fetch_optional(pool.deref())
             .await
-            .expect("Failed to fetch book by id")
-            .map(|row| Book {
-                id: row.get::<String, _>("id").parse().unwrap(),
+            .map_err(|_e| AppError::DatabaseError)?;
+
+        let book = match book {
+            Some(row) => Book {
+                id: row
+                    .get::<String, _>("id")
+                    .parse()
+                    .map_err(|_e| AppError::DatabaseError)?,
                 name: row.get("name"),
                 year: row.get("year"),
                 author: row.get("author"),
@@ -143,24 +155,26 @@ impl BookRepo for SqliteBookRepo {
                 updated_at: row
                     .get::<String, _>("updated_at")
                     .parse()
-                    .unwrap_or(Utc::now()),
+                    .map_err(|_e| AppError::DatabaseError)?,
                 inserted_at: row
                     .get::<String, _>("inserted_at")
                     .parse()
-                    .unwrap_or(Utc::now()),
-            });
+                    .map_err(|_e| AppError::DatabaseError)?,
+            },
+            None => return Ok(None),
+        };
 
-        book
+        Ok(Some(book))
     }
 
-    async fn delete_book(&self, id: Uuid) -> Uuid {
+    async fn delete_book(&self, id: Uuid) -> Result<Uuid, AppError> {
         let pool = self.0.lock().await;
         sqlx::query("DELETE FROM books WHERE id = ?")
             .bind(id.to_string())
             .execute(pool.deref())
             .await
-            .expect("Failed to delete book");
+            .map_err(|_e| AppError::DatabaseError)?;
 
-        id
+        Ok(id)
     }
 }

@@ -151,16 +151,9 @@ pub async fn get_books(
 )]
 pub async fn get_book_by_id(
     State(state): State<BookState>,
-    Path(id): Path<String>,
+    Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, AppError> {
-    let book_id = match Uuid::parse_str(&id) {
-        Ok(data) => data,
-        Err(_) => {
-            let message = "Buku tidak ditemukan".to_string();
-            return Err(AppError::ClientFail(StatusCode::NOT_FOUND, message));
-        }
-    };
-    if let Ok(Some(book)) = state.repo.get_book_by_id(book_id).await {
+    if let Ok(Some(book)) = state.repo.get_book_by_id(id).await {
         let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
         let body = Json(json!({
             "status": "success",
@@ -191,17 +184,9 @@ pub async fn get_book_by_id(
 )]
 pub async fn update_book(
     State(state): State<BookState>,
-    Path(id): Path<String>,
+    Path(id): Path<Uuid>,
     Json(params): Json<BookParams>,
 ) -> Result<impl IntoResponse, AppError> {
-    let book_id = match Uuid::parse_str(&id) {
-        Ok(data) => data,
-        Err(_) => {
-            let message = "Gagal memperbarui buku. Id tidak ditemukan".to_string();
-            return Err(AppError::ClientFail(StatusCode::NOT_FOUND, message));
-        }
-    };
-
     if params.name.is_empty() {
         let message = "Gagal memperbarui buku. Mohon isi nama buku".to_string();
         return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));

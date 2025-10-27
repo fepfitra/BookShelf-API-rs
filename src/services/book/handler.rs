@@ -84,7 +84,7 @@ pub async fn create_book(
             false
         },
     };
-    let id = state.repo.save_book(&book);
+    let id = state.repo.save_book(&book).await;
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
 
@@ -125,7 +125,7 @@ pub async fn get_books(
         .map(|n| n == 1);
     let name = query.name;
 
-    let books = state.repo.get_books(name, reading, finished);
+    let books = state.repo.get_books(name, reading, finished).await;
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
     let body = Json(json!({
@@ -160,7 +160,7 @@ pub async fn get_book_by_id(
             return Err(AppError::ClientFail(StatusCode::NOT_FOUND, message));
         }
     };
-    if let Some(book) = state.repo.get_book_by_id(book_id) {
+    if let Some(book) = state.repo.get_book_by_id(book_id).await {
         let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
         let body = Json(json!({
             "status": "success",
@@ -213,7 +213,7 @@ pub async fn update_book(
         return Err(AppError::ClientFail(StatusCode::BAD_REQUEST, message));
     }
 
-    if let Some(mut book) = state.repo.get_book_by_id(book_id) {
+    if let Some(mut book) = state.repo.get_book_by_id(book_id).await {
         book.name = params.name;
         book.year = if params.year == 0 {
             book.year
@@ -257,7 +257,7 @@ pub async fn update_book(
         };
         book.updated_at = Utc::now();
 
-        state.repo.save_book(&book);
+        state.repo.save_book(&book).await;
 
         let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
         let body = Json(json!({
@@ -295,7 +295,7 @@ pub async fn delete_book(
         }
     };
 
-    let deleted_id = state.repo.delete_book(book_id);
+    let deleted_id = state.repo.delete_book(book_id).await;
 
     let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
     let body = Json(json!({

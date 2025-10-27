@@ -1,7 +1,6 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use async_trait::async_trait;
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use super::{Book, BookRepo, BookSummary};
@@ -9,18 +8,19 @@ use super::{Book, BookRepo, BookSummary};
 #[derive(Default, Clone)]
 pub struct InMemoryBookRepo(Arc<Mutex<HashMap<Uuid, Book>>>);
 
+#[async_trait]
 impl BookRepo for InMemoryBookRepo {
-    fn save_book(&self, book: &Book) -> Uuid {
-        self.0.lock().unwrap().insert(book.id, book.clone());
+    async fn save_book(&self, book: &Book) -> Uuid {
+        self.0.lock().await.insert(book.id, book.clone());
         book.id
     }
-    fn get_books(
+    async fn get_books(
         &self,
         name: Option<String>,
         reading: Option<bool>,
         finished: Option<bool>,
     ) -> Vec<BookSummary> {
-        let data = self.0.lock().unwrap();
+        let data = self.0.lock().await;
         let mut books: Vec<_> = data.values().collect();
 
         if let Some(name_filter) = &name {
@@ -47,13 +47,13 @@ impl BookRepo for InMemoryBookRepo {
             })
             .collect()
     }
-    fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
-        self.0.lock().unwrap().get(&id).cloned()
+    async fn get_book_by_id(&self, id: Uuid) -> Option<Book> {
+        self.0.lock().await.get(&id).cloned()
     }
-    fn delete_book(&self, id: Uuid) -> Uuid {
+    async fn delete_book(&self, id: Uuid) -> Uuid {
         self.0
             .lock()
-            .unwrap()
+            .await
             .remove(&id)
             .map(|book| book.id)
             .unwrap_or(id)

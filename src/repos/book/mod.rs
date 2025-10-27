@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use uuid::Uuid;
@@ -28,11 +29,12 @@ pub struct BookSummary {
     pub publisher: String,
 }
 
+#[async_trait]
 pub trait BookRepo: Send + Sync {
-    fn save_book(&self, _book: &Book) -> Uuid {
+    async fn save_book(&self, _book: &Book) -> Uuid {
         unimplemented!()
     }
-    fn get_books(
+    async fn get_books(
         &self,
         _name: Option<String>,
         _reading: Option<bool>,
@@ -40,10 +42,10 @@ pub trait BookRepo: Send + Sync {
     ) -> Vec<BookSummary> {
         unimplemented!()
     }
-    fn get_book_by_id(&self, _id: Uuid) -> Option<Book> {
+    async fn get_book_by_id(&self, _id: Uuid) -> Option<Book> {
         unimplemented!()
     }
-    fn delete_book(&self, _id: Uuid) -> Uuid {
+    async fn delete_book(&self, _id: Uuid) -> Uuid {
         unimplemented!()
     }
 }

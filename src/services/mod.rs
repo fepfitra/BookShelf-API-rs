@@ -3,24 +3,17 @@ use utoipa::OpenApi;
 pub mod auth;
 pub mod book;
 
-use crate::services;
-
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        crate::services::book::handler::create_book,
-        crate::services::book::handler::get_books,
-        crate::services::book::handler::get_book_by_id,
-        crate::services::book::handler::update_book,
-        crate::services::book::handler::delete_book,
-        crate::services::auth::handler::authorize,
-        crate::services::auth::handler::protected
+        book::handler::create_book,
+        book::handler::get_books,
+        book::handler::get_book_by_id,
+        book::handler::update_book,
+        book::handler::delete_book,
+        auth::handler::authorize,
+        auth::handler::protected
     ),
-    components(schemas(
-        crate::services::book::handler::BookParams,
-        crate::services::book::handler::BooksQuery,
-        crate::services::auth::AuthParams
-    )),
-    tags()
+    components(schemas(book::handler::BookParams, book::handler::BooksQuery, auth::AuthParams))
 )]
 pub struct ApiDoc;

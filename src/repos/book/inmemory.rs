@@ -22,26 +22,23 @@ impl BookRepo for InMemoryBookRepo {
         reading: Option<bool>,
         finished: Option<bool>,
     ) -> Result<Vec<BookSummary>, AppError> {
-        let data = self.0.lock().await;
-        let mut books: Vec<_> = data.values().collect();
+        let all_books: Vec<Book> = self.0.lock().await.values().cloned().collect();
 
-        if let Some(name_filter) = &name {
-            books.retain(|book| {
-                book.name
-                    .to_lowercase()
-                    .contains(&name_filter.to_lowercase())
+        let books = all_books
+            .into_iter()
+            .filter(|book| {
+                name.as_ref().map_or(true, |name_filter| {
+                    book.name
+                        .to_lowercase()
+                        .contains(&name_filter.to_lowercase())
+                })
+            })
+            .filter(|book| reading.map_or(true, |reading_filter| book.reading == reading_filter))
+            .filter(|book| {
+                finished.map_or(true, |finished_filter| book.finished == finished_filter)
             });
-        }
-        if let Some(reading_filter) = reading {
-            books.retain(|book| book.reading == reading_filter);
-        }
-
-        if let Some(finished_filter) = finished {
-            books.retain(|book| book.finished == finished_filter);
-        }
 
         Ok(books
-            .into_iter()
             .map(|book| BookSummary {
                 id: book.id,
                 name: book.name.clone(),
@@ -53,12 +50,7 @@ impl BookRepo for InMemoryBookRepo {
         Ok(self.0.lock().await.get(&id).cloned())
     }
     async fn delete_book(&self, id: Uuid) -> Result<Uuid, AppError> {
-        Ok(self
-            .0
-            .lock()
-            .await
-            .remove(&id)
-            .map(|book| book.id)
-            .unwrap_or(id))
+        self.0.lock().await.remove(&id);
+        Ok(id)
     }
 }

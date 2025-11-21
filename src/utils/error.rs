@@ -5,56 +5,43 @@ use axum::{
 };
 use serde_json::json;
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum AppError {
+    #[error("Client error: {1}")]
     ClientFail(StatusCode, String),
+    #[error("Database error")]
     DatabaseError,
+    #[error("Wrong credentials")]
     WrongCredentials,
+    #[error("Missing credentials")]
     MissingCredentials,
+    #[error("Token creation error")]
     TokenCreation,
+    #[error("Invalid token")]
     InvalidToken,
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let headers = [(header::CONTENT_TYPE, "application/json; charset=utf-8")];
-        match self {
-            AppError::ClientFail(status, message) => (
-                status,
-                headers,
-                Json(json!({"status": "fail", "message": message})),
-            )
-                .into_response(),
-            AppError::DatabaseError => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                headers,
-                Json(json!({"status": "error", "message": "Database error"})),
-            )
-                .into_response(),
-            AppError::WrongCredentials => (
-                StatusCode::UNAUTHORIZED,
-                headers,
-                Json(json!({"status": "fail", "message": "Wrong credentials"})),
-            )
-                .into_response(),
-            AppError::MissingCredentials => (
-                StatusCode::UNAUTHORIZED,
-                headers,
-                Json(json!({"status": "fail", "message": "Missing credentials"})),
-            )
-                .into_response(),
-            AppError::TokenCreation => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                headers,
-                Json(json!({"status": "error", "message": "Token creation error"})),
-            )
-                .into_response(),
-            AppError::InvalidToken => (
-                StatusCode::UNAUTHORIZED,
-                headers,
-                Json(json!({"status": "fail", "message": "Invalid token"})),
-            )
-                .into_response(),
-        }
+        let (status, status_type, message) = match self {
+            AppError::ClientFail(status, message) => (status, "fail", message),
+            AppError::DatabaseError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "error", self.to_string())
+            }
+            AppError::WrongCredentials => (StatusCode::UNAUTHORIZED, "fail", self.to_string()),
+            AppError::MissingCredentials => (StatusCode::UNAUTHORIZED, "fail", self.to_string()),
+            AppError::TokenCreation => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "error", self.to_string())
+            }
+            AppError::InvalidToken => (StatusCode::UNAUTHORIZED, "fail", self.to_string()),
+        };
+
+        (
+            status,
+            headers,
+            Json(json!({"status": status_type, "message": message})),
+        )
+            .into_response()
     }
 }
